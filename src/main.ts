@@ -1,16 +1,29 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import {context, getOctokit} from '@actions/github'
+import {requestLog} from '@octokit/plugin-request-log'
+import {retry} from '@octokit/plugin-retry'
+import {computeLabels, writeLabels} from './labels'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    const token: string = core.getInput('github-token', {required: true})
+    const octokit = getOctokit(token, undefined, retry, requestLog)
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const labelPrefix: string = core.getInput('label-prefix', {
+      required: true
+    })
 
-    core.setOutput('time', new Date().toTimeString())
+    const pulumiOutput: string = core.getInput('pulumi-output', {
+      required: true
+    })
+
+    const prNumber: number | undefined = context.payload.pull_request?.number
+    if (prNumber === undefined) {
+      throw new Error('No pull request number found')
+    }
+
+    const labels = await computeLabels(pulumiOutput, labelPrefix)
+    await writeLabels(labels, prNumber, context, octokit)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

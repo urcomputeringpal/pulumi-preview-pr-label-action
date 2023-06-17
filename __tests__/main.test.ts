@@ -1,29 +1,44 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
+import {computeLabels} from '../src/labels'
 import {expect, test} from '@jest/globals'
 
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
+test('only some', async () => {
+  const pulumiOutput = `
+    ~ 4 to update
+    +-8 to replace
+  `
+
+  const labels = await computeLabels(pulumiOutput, 'production')
+  expect(labels.add).toContain('production changes')
+  expect(labels.add).toContain('production replacements')
+  expect(labels.remove).toContain('production creations')
+  expect(labels.remove).toContain('production deletions')
+  expect(labels.remove).toContain('production noop')
 })
 
-test('wait 500 ms', async () => {
-  const start = new Date()
-  await wait(500)
-  const end = new Date()
-  var delta = Math.abs(end.getTime() - start.getTime())
-  expect(delta).toBeGreaterThan(450)
+test('all', async () => {
+  const pulumiOutput = `
+    + 5 to create
+    ~ 4 to update
+    - 5 to delete
+    +-9 to replace
+  `
+
+  const labels = await computeLabels(pulumiOutput, 'production')
+  expect(labels.add).toContain('production changes')
+  expect(labels.add).toContain('production replacements')
+  expect(labels.add).toContain('production creations')
+  expect(labels.add).toContain('production deletions')
+  expect(labels.remove).toContain('production noop')
 })
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = '500'
-  const np = process.execPath
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecFileSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execFileSync(np, [ip], options).toString())
+test('noop', async () => {
+  const pulumiOutput = `
+  `
+
+  const labels = await computeLabels(pulumiOutput, 'production')
+  expect(labels.remove).toContain('production changes')
+  expect(labels.remove).toContain('production replacements')
+  expect(labels.remove).toContain('production creations')
+  expect(labels.remove).toContain('production deletions')
+  expect(labels.add).toContain('production noop')
 })

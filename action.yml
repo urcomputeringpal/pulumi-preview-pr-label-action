@@ -1,11 +1,17 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: Pulumi Preview PR Label Action
+description: Decorate your PR with context from Pulumi Preview output.
+author: "@urcomputeringpal"
 inputs:
-  milliseconds: # change this
+  github-token: 
+    description: Token to use
+    default: ${{ github.token }}
+  pulumi-output: 
+    description: Pulumi output to parse
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  label-prefix:
+    description: String to prefix your label with
+    default: Pulumi
+
 runs:
   using: 'node16'
   main: 'dist/index.js'
