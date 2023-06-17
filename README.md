@@ -1,6 +1,6 @@
 # Pulumi Preview PR Label Action
 
-Decorate your PR with context Pulumi Preview output
+Decorate your PR with context from Pulumi Preview output. 
 
 See [./action.yml](./action.yml) for the full documentation for this action's inputs and outputs.
 
