@@ -21,9 +21,9 @@ export async function computeLabels(
   }
 
   if (pulumiOutput.match('[1-9]* to update')) {
-    labels.add.push(`${labelPrefix} changes`)
+    labels.add.push(`${labelPrefix} updates`)
   } else {
-    labels.remove.push(`${labelPrefix} changes`)
+    labels.remove.push(`${labelPrefix} updates`)
   }
 
   if (pulumiOutput.match('[1-9]* to replace')) {

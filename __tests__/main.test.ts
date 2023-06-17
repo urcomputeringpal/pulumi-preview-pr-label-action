@@ -8,7 +8,7 @@ test('only some', async () => {
   `
 
   const labels = await computeLabels(pulumiOutput, 'production')
-  expect(labels.add).toContain('production changes')
+  expect(labels.add).toContain('production updates')
   expect(labels.add).toContain('production replacements')
   expect(labels.remove).toContain('production creations')
   expect(labels.remove).toContain('production deletions')
@@ -24,7 +24,7 @@ test('all', async () => {
   `
 
   const labels = await computeLabels(pulumiOutput, 'production')
-  expect(labels.add).toContain('production changes')
+  expect(labels.add).toContain('production updates')
   expect(labels.add).toContain('production replacements')
   expect(labels.add).toContain('production creations')
   expect(labels.add).toContain('production deletions')
@@ -36,7 +36,7 @@ test('noop', async () => {
   `
 
   const labels = await computeLabels(pulumiOutput, 'production')
-  expect(labels.remove).toContain('production changes')
+  expect(labels.remove).toContain('production updates')
   expect(labels.remove).toContain('production replacements')
   expect(labels.remove).toContain('production creations')
   expect(labels.remove).toContain('production deletions')
