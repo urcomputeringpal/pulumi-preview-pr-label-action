@@ -1,5 +1,5 @@
 name: Test
-on: # rebuild any PRs and main branch changes
+on:
   pull_request:
   push:
     branches:
@@ -17,6 +17,7 @@ jobs:
           npm run all
   demo:
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v3
       - uses: ./
