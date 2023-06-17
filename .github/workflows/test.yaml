@@ -23,4 +23,4 @@ jobs:
         with:
           label-prefix: demo
           pulumi-output: |
-            1 to change
+            1 to update
