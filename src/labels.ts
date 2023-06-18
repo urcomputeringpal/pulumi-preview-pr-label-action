@@ -53,7 +53,7 @@ export async function computeLabels(
   return labels
 }
 
-export async function writeLabels(
+export async function labelPR(
   labels: LabelMutations,
   prNumber: number,
   context: Context,
@@ -75,6 +75,72 @@ export async function writeLabels(
     } catch (error: unknown) {
       if (error instanceof Error && 'status' in error && error.status !== 404) {
         throw error
+      }
+    }
+  }
+}
+
+// an exported function called ensureLabels that takes in a labelPrefix
+// string, a context object, and an octokit object this function either creates
+// or updates each of the labels that the computeLabels function may return to
+// assign them colors that reflect their meaning (to me at least).
+export async function ensureLabels(
+  labelPrefix: string,
+  context: Context,
+  octokit: OctokitInstance
+): Promise<void> {
+  const labels = [
+    {
+      name: `${labelPrefix} updates`,
+      color: 'ffcc00',
+      description: `This PR will update Pulumi resources in ${labelPrefix}.`
+    },
+    {
+      name: `${labelPrefix} replacements`,
+      color: 'ff9900',
+      description: `This PR will replace Pulumi resources in ${labelPrefix}.`
+    },
+    {
+      name: `${labelPrefix} creations`,
+      color: '0000ff',
+      description: `This PR will create Pulumi resources in ${labelPrefix}.`
+    },
+    {
+      name: `${labelPrefix} deletions`,
+      color: 'ff3300',
+      description: `This PR will delete Pulumi resources in ${labelPrefix}.`
+    },
+    {
+      name: `${labelPrefix} noop`,
+      color: '00cc00',
+      description: `This PR is a ${labelPrefix} Pulumi noop.`
+    }
+  ]
+
+  for (const label of labels) {
+    try {
+      await octokit.rest.issues.createLabel({
+        ...context.repo,
+        ...label
+      })
+    } catch (error: unknown) {
+      if (error instanceof Error && 'status' in error && error.status !== 422) {
+        throw error
+      }
+      // update the label's color if it already exists
+      try {
+        await octokit.rest.issues.updateLabel({
+          ...context.repo,
+          ...label
+        })
+      } catch (updateError: unknown) {
+        if (
+          updateError instanceof Error &&
+          'status' in updateError &&
+          updateError.status !== 422
+        ) {
+          throw updateError
+        }
       }
     }
   }

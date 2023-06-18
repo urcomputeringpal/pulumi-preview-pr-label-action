@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import {context, getOctokit} from '@actions/github'
 import {requestLog} from '@octokit/plugin-request-log'
 import {retry} from '@octokit/plugin-retry'
-import {computeLabels, writeLabels} from './labels'
+import {computeLabels, ensureLabels, labelPR} from './labels'
 
 async function run(): Promise<void> {
   try {
@@ -23,7 +23,8 @@ async function run(): Promise<void> {
     }
 
     const labels = await computeLabels(pulumiOutput, labelPrefix)
-    await writeLabels(labels, prNumber, context, octokit)
+    await ensureLabels(labelPrefix, context, octokit)
+    await labelPR(labels, prNumber, context, octokit)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
