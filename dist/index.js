@@ -16,7 +16,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.writeLabels = exports.computeLabels = void 0;
+exports.ensureLabels = exports.labelPR = exports.computeLabels = void 0;
 function computeLabels(pulumiOutput, labelPrefix) {
     return __awaiter(this, void 0, void 0, function* () {
         const labels = {
@@ -60,7 +60,7 @@ function computeLabels(pulumiOutput, labelPrefix) {
     });
 }
 exports.computeLabels = computeLabels;
-function writeLabels(labels, prNumber, context, octokit) {
+function labelPR(labels, prNumber, context, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         yield octokit.rest.issues.addLabels(Object.assign(Object.assign({}, context.repo), { issue_number: prNumber, labels: labels.add }));
         for (const label of labels.remove) {
@@ -75,7 +75,64 @@ function writeLabels(labels, prNumber, context, octokit) {
         }
     });
 }
-exports.writeLabels = writeLabels;
+exports.labelPR = labelPR;
+// an exported function called ensureLabels that takes in a labelPrefix
+// string, a context object, and an octokit object this function either creates
+// or updates each of the labels that the computeLabels function may return to
+// assign them colors that reflect their meaning (to me at least).
+function ensureLabels(labelPrefix, context, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const labels = [
+            {
+                name: `${labelPrefix} updates`,
+                color: 'ffcc00',
+                description: `This PR will update Pulumi resources in ${labelPrefix}.`
+            },
+            {
+                name: `${labelPrefix} replacements`,
+                color: 'ff9900',
+                description: `This PR will replace Pulumi resources in ${labelPrefix}.`
+            },
+            {
+                name: `${labelPrefix} creations`,
+                color: '0000ff',
+                description: `This PR will create Pulumi resources in ${labelPrefix}.`
+            },
+            {
+                name: `${labelPrefix} deletions`,
+                color: 'ff3300',
+                description: `This PR will delete Pulumi resources in ${labelPrefix}.`
+            },
+            {
+                name: `${labelPrefix} noop`,
+                color: '00cc00',
+                description: `This PR is a ${labelPrefix} Pulumi noop.`
+            }
+        ];
+        for (const label of labels) {
+            try {
+                yield octokit.rest.issues.createLabel(Object.assign(Object.assign({}, context.repo), label));
+            }
+            catch (error) {
+                if (error instanceof Error && 'status' in error && error.status !== 422) {
+                    throw error;
+                }
+                // update the label's color if it already exists
+                try {
+                    yield octokit.rest.issues.updateLabel(Object.assign(Object.assign({}, context.repo), label));
+                }
+                catch (updateError) {
+                    if (updateError instanceof Error &&
+                        'status' in updateError &&
+                        updateError.status !== 422) {
+                        throw updateError;
+                    }
+                }
+            }
+        }
+    });
+}
+exports.ensureLabels = ensureLabels;
 
 
 /***/ }),
@@ -140,7 +197,8 @@ function run() {
                 throw new Error('No pull request number found');
             }
             const labels = yield (0, labels_1.computeLabels)(pulumiOutput, labelPrefix);
-            yield (0, labels_1.writeLabels)(labels, prNumber, github_1.context, octokit);
+            yield (0, labels_1.ensureLabels)(labelPrefix, github_1.context, octokit);
+            yield (0, labels_1.labelPR)(labels, prNumber, github_1.context, octokit);
         }
         catch (error) {
             if (error instanceof Error)
