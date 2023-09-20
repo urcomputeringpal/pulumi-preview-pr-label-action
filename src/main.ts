@@ -25,6 +25,9 @@ async function run(): Promise<void> {
     const labels = await computeLabels(pulumiOutput, labelPrefix)
     await ensureLabels(labelPrefix, context, octokit)
     await labelPR(labels, prNumber, context, octokit)
+    for (const label of labels.add) {
+      core.setOutput(label.replace(/ /, '-'), 'true')
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

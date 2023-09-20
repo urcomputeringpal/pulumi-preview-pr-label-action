@@ -21,7 +21,15 @@ jobs:
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3
       - uses: ./
+        id: demo
         with:
           label-prefix: demo
           pulumi-output: |
             1 to update
+      - name: test-outputs
+        env:
+          JSON: ${{ toJson(steps.demo.outputs) }}
+          UPDATE: ${{ steps.demo.outputs.demo-updates }}
+        run: |
+          echo $JSON
+          [ "$UPDATE" == "true" ]
