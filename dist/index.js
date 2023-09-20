@@ -199,6 +199,9 @@ function run() {
             const labels = yield (0, labels_1.computeLabels)(pulumiOutput, labelPrefix);
             yield (0, labels_1.ensureLabels)(labelPrefix, github_1.context, octokit);
             yield (0, labels_1.labelPR)(labels, prNumber, github_1.context, octokit);
+            for (const label of labels.add) {
+                core.setOutput(label.replace(/ /, '-'), 'true');
+            }
         }
         catch (error) {
             if (error instanceof Error)
